@@ -1,16 +1,21 @@
-document.getElementById('fileInput').addEventListener('change', handleFile);
-
-function handleFile() {
-    let file = document.getElementById('fileInput').files[0];
-    if (file) {
-        let reader = new FileReader();
-        reader.readAsArrayBuffer(file);
-        reader.onload = function(e) {
-            let data = new Uint8Array(e.target.result);
-            let workbook = XLSX.read(data, { type: 'array' });
-            displayData(workbook);
-        };
-    }
+function loadLatestFile() {
+    fetch('tables/latest.json')  // Файл с информацией о последней таблице
+        .then(response => response.json())
+        .then(data => {
+            let fileName = data.latestFile;
+            if (fileName) {
+                fetch(`tables/${fileName}`)
+                    .then(response => response.arrayBuffer())
+                    .then(data => {
+                        let workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+                        displayData(workbook);
+                    })
+                    .catch(error => console.error('Ошибка загрузки файла:', error));
+            } else {
+                alert("Файл не найден!");
+            }
+        })
+        .catch(error => console.error('Ошибка загрузки списка файлов:', error));
 }
 
 function displayData(workbook) {
